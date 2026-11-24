@@ -1,0 +1,59 @@
+name: PLLI LIVE experimental monitor
+on:
+  pull_request:
+    paths:
+      - 'plli-live/**'
+      - '.github/workflows/plli-live.yml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'check = dry run; test = labeled push; send = actual live only'
+        type: choice
+        options: [check, test, send]
+        default: check
+  schedule:
+    - cron: '3-58/5 * * * *'
+permissions:
+  contents: read
+concurrency:
+  group: plli-live-monitor
+  cancel-in-progress: false
+jobs:
+  check:
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'check')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install yt-dlp
+      - run: python plli-live/monitor.py --mode check
+  send:
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode != 'check')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install yt-dlp
+      - run: python plli-live/monitor.py --mode "$MODE"
+        env:
+          MODE: ${{ github.event_name == 'schedule' && 'send' || inputs.mode }}
+      - name: Persist delivered broadcast IDs
+        if: always() && !cancelled()
+        run: |
+          if [ -f plli-live/sent.json ]; then
+            git add plli-live/sent.json
+            if ! git diff --cached --quiet; then
+              git config user.name 'github-actions[bot]'
+              git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+              git commit -m 'Record sent PLLI live alerts'
+              git push
+            fi
+          fi
