@@ -30,7 +30,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install yt-dlp
       - name: One-time labeled phone notification test
-        if: github.event_name == 'pull_request' && github.run_number == 3 && github.run_attempt == 1
+        if: github.event_name == 'pull_request' && github.run_number == 4 && github.run_attempt == 1
         run: python plli-live/monitor.py --mode test
       - run: python plli-live/monitor.py --mode check
   send:
