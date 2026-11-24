@@ -29,6 +29,9 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install yt-dlp
+      - name: One-time labeled phone notification test
+        if: github.event_name == 'pull_request' && github.run_number == 2 && github.run_attempt == 1
+        run: python plli-live/monitor.py --mode test
       - run: python plli-live/monitor.py --mode check
   send:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode != 'check')
