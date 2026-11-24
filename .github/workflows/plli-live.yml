@@ -29,6 +29,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install yt-dlp==2026.11.23
+      - name: Probe public rendered live page
+        run: |
+          python -m pip install playwright
+          python -m playwright install chromium --with-deps
+          python plli-live/public_probe.py
       - run: python plli-live/monitor.py --mode check
   send:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode != 'check')
