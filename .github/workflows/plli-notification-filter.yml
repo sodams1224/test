@@ -1,0 +1,15 @@
+name: PLLI notification filter tests
+on:
+  pull_request:
+    paths:
+      - 'plli-live/notification_filter.py'
+      - '.github/workflows/plli-notification-filter.yml'
+permissions:
+  contents: read
+jobs:
+  filter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 plli-live/notification_filter.py
